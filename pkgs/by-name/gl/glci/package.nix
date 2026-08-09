@@ -20,7 +20,7 @@ buildGoModule (finalAttrs: {
     group = "gitlab-org/ci-cd";
     owner = "runner-tools";
     repo = "glci";
-    rev = "917cd8ecaf1af7377d48ee83cdd1b2c35c6c53c2";
+    rev = "v${finalAttrs.version}";
     hash = "sha256-S6MvJIAQmRqrME+sl/2MUiQ2FsStbcn6lclxRY8s+X4=";
   };
 
@@ -46,41 +46,6 @@ buildGoModule (finalAttrs: {
       --replace-fail "#!/bin/sh" "#!${runtimeShell}" \
       --replace-fail "/usr/bin/env" "env" \
       --replace-fail "/bin/cat" "cat"
-
-    substituteInPlace pkg/config/testdata/gitlab/raw/.gitlab-ci.yml \
-      --replace-fail \
-        "  - remote: 'https://gitlab.com/gitlab-org/frontend/untamper-my-lockfile/-/raw/main/templates/merge_request_pipelines.yml'" \
-        "  - local: .gitlab/ci/untamper-my-lockfile.yml"
-
-    cat > pkg/config/testdata/gitlab/raw/.gitlab/ci/untamper-my-lockfile.yml <<'EOF'
-    untamper-my-lockfile:
-      image: registry.gitlab.com/gitlab-org/frontend/untamper-my-lockfile:main
-      stage: test
-      needs: []
-      before_script: []
-      after_script: []
-      cache: {}
-      retry: 1
-      script:
-        - untamper-my-lockfile --lockfile yarn.lock
-      rules:
-        - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "add-untamper-my-lockfile"
-        - if: $CI_MERGE_REQUEST_IID
-          changes:
-            - yarn.lock
-        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-          changes:
-            - yarn.lock
-    EOF
-  '';
-
-  preCheck = ''
-    git init --quiet --initial-branch=main
-    git config user.email glci-tests@example.invalid
-    git config user.name "glci tests"
-    git add .
-    git commit --quiet --message "Test fixture"
-    git remote add origin https://gitlab.com/gitlab-org/ci-cd/runner-tools/glci.git
   '';
 
   checkPhase = ''
@@ -103,7 +68,7 @@ buildGoModule (finalAttrs: {
     touch $out
   '';
 
-  passthru.updateScript = nix-update-script {  };
+  passthru.updateScript = nix-update-script { };
 
   meta = {
     description = "Run GitLab CI/CD pipelines locally";
