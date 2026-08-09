@@ -2,6 +2,7 @@
   lib,
   buildGoModule,
   fetchFromGitLab,
+  fetchurl,
   gitMinimal,
   makeWrapper,
   nix-update-script,
@@ -46,6 +47,27 @@ buildGoModule (finalAttrs: {
       --replace-fail "#!/bin/sh" "#!${runtimeShell}" \
       --replace-fail "/usr/bin/env" "env" \
       --replace-fail "/bin/cat" "cat"
+
+    # The sandbox blocks the remote include used by this test fixture.
+    cp ${
+      fetchurl {
+        url = "https://gitlab.com/gitlab-org/frontend/untamper-my-lockfile/-/raw/bea592e045f9f97ae4929f7de592834aa6c8e306/templates/merge_request_pipelines.yml";
+        hash = "sha256-BozLjE+uzwZJEC5jBWZoJ+ZfvcTiBlj80d0CsVi+ZsI=";
+      }
+    } pkg/config/testdata/gitlab/raw/.gitlab/ci/untamper-my-lockfile.yml
+    substituteInPlace pkg/config/testdata/gitlab/raw/.gitlab-ci.yml \
+      --replace-fail \
+        "remote: 'https://gitlab.com/gitlab-org/frontend/untamper-my-lockfile/-/raw/main/templates/merge_request_pipelines.yml'" \
+        "local: .gitlab/ci/untamper-my-lockfile.yml"
+  '';
+
+  preCheck = ''
+    git init --quiet --initial-branch=main
+    git config user.email glci-tests@example.invalid
+    git config user.name "glci tests"
+    git add .
+    git commit --quiet --message "Test fixture"
+    git remote add origin https://gitlab.com/gitlab-org/ci-cd/runner-tools/glci.git
   '';
 
   checkPhase = ''
