@@ -61,6 +61,7 @@ buildGoModule (finalAttrs: {
         "local: .gitlab/ci/untamper-my-lockfile.yml"
   '';
 
+  # Source archives lack the Git metadata required by pkg/variables tests.
   preCheck = ''
     git init --quiet --initial-branch=main
     git config user.email glci-tests@example.invalid
