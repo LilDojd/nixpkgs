@@ -4,6 +4,7 @@
   fetchFromGitLab,
   gitMinimal,
   makeWrapper,
+  nix-update-script,
   runCommand,
   runtimeShell,
   writableTmpDirAsHomeHook,
@@ -102,7 +103,7 @@ buildGoModule (finalAttrs: {
     touch $out
   '';
 
-  passthru.updateScript = ./update.sh;
+  passthru.updateScript = nix-update-script {  };
 
   meta = {
     description = "Run GitLab CI/CD pipelines locally";
